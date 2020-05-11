@@ -3,6 +3,7 @@ package com.telerik.metadata;
 import com.telerik.metadata.TreeNode.FieldInfo;
 import com.telerik.metadata.TreeNode.MethodInfo;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
@@ -11,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-public class Writer {
+public class Writer implements AutoCloseable {
 
     private final StreamWriter outNodeStream;
     private final StreamWriter outValueStream;
@@ -280,8 +281,6 @@ public class Writer {
             }
         }
 
-        outStringsStream.flush();
-        outStringsStream.close();
         writeInt(0, outValueStream);
 
         final int array_offset = 1000 * 1000 * 1000;
@@ -312,8 +311,6 @@ public class Writer {
             }
         }
 
-        outValueStream.flush();
-        outValueStream.close();
 
         d.push(root);
         while (!d.isEmpty()) {
@@ -356,7 +353,21 @@ public class Writer {
             d.addAll(n.children);
         }
 
-        outNodeStream.flush();
-        outNodeStream.close();
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (outStringsStream != null) {
+            outStringsStream.flush();
+            outStringsStream.close();
+        }
+        if (outValueStream != null) {
+            outValueStream.flush();
+            outValueStream.close();
+        }
+        if (outNodeStream != null) {
+            outNodeStream.flush();
+            outNodeStream.close();
+        }
     }
 }
